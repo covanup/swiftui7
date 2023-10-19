@@ -1,80 +1,50 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State var enabled = false
-    @State var layout: any Layout = HStackLayout()
+    @State private var isExpanded = false
+    @Namespace private var namespace
 
     var body: some View {
-        AnyLayout(self.layout) {
-            ForEach(0..<7) { _ in
-                createRectangle()
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-    
-    private func createRectangle() -> some View {
-        RoundedRectangle(cornerRadius: 8)
-            .fill(.blue)
-            .onTapGesture {
-                withAnimation {
-                    enabled.toggle()
-                    self.layout = enabled ? DiagonalLayout() : HStackLayout()
+        ZStack(alignment: isExpanded ? .center : .bottomTrailing) {
+            Color.white
+
+            Group {
+                if isExpanded {
+                    ZStack(alignment: .top) {
+                        createRoundedRectangle(width: 350, height: 400)
+                        
+                        Button { isExpanded.toggle() } label: {
+                            Text("\(Image(systemName: "arrowshape.backward.fill")) Back")
+                                .matchedGeometryEffect(id: "1", in: namespace)
+                                .foregroundStyle(.white).bold()
+                                .padding()
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .matchedGeometryEffect(id: "2", in: namespace)
+                        }
+                        .frame(width: 350, alignment: .leading)
+                    }
+                } else {
+                    ZStack {
+                        createRoundedRectangle(width: 100, height: 50)
+                        
+                        Button { isExpanded.toggle() } label: {
+                            Text("Open")
+                                .matchedGeometryEffect(id: "1", in: namespace)
+                                .foregroundStyle(.white).bold()
+                                .matchedGeometryEffect(id: "2", in: namespace)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding()
                 }
-            }
-    }
-}
-
-struct DiagonalLayout: Layout {
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        proposal.replacingUnspecifiedDimensions()
+            } }
+        .animation(.spring(duration: 0.3), value: isExpanded)
     }
     
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let width = proposal.replacingUnspecifiedDimensions().width
-        let height = proposal.replacingUnspecifiedDimensions().height
-
-        let count = CGFloat(subviews.count)
-        let side = height / count
-
-        var currentY = bounds.maxY
-        var currentX = bounds.minX
-
-        for subview in subviews {
-            let subviewSize = CGSize(width: side, height: side)
-            let position = CGPoint(x: currentX, y: currentY)
-
-            subview.place(at: position, anchor: .bottomLeading, proposal: ProposedViewSize(subviewSize))
-
-            currentY -= subviewSize.height
-            currentX += (width - side) / (count - 1)
-        }
-    }
-}
-
-struct HStackLayout: Layout {
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        proposal.replacingUnspecifiedDimensions()
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let width = proposal.replacingUnspecifiedDimensions().width
-
-        let count = CGFloat(subviews.count)
-        let spacing = 8.0 * (count - 1)
-        let side = (width - spacing) / count
-
-        let size = CGSize(width: side, height: side)
-
-        let currentY = bounds.midY
-        var currentX = bounds.minX + side / 2
-
-        for subview in subviews {
-            let position = CGPoint(x: currentX, y: currentY)
-
-            subview.place(at: position, anchor: .center, proposal: ProposedViewSize(size))
-
-            currentX += side + spacing / (count - 1)
-        }
+    private func createRoundedRectangle(width: CGFloat, height: CGFloat) -> some View {
+        RoundedRectangle(cornerRadius: 12)
+            .fill(Color.blue)
+            .matchedGeometryEffect(id: "background", in: namespace)
+            .frame(width: width, height: height)
     }
 }
